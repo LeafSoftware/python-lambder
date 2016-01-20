@@ -3,13 +3,17 @@ Creates and manages scheduled AWS Lambdas
 """
 from setuptools import find_packages, setup
 
-dependencies = ['click']
+dependencies = [
+  'click>=6.2',
+  'boto3>=1.2.3',
+  'botocore>=1.3.20'
+]
 
 setup(
     name='lambder',
     version='0.1.0',
-    url='https://github.com/chalfant/python-lambder',
-    license='BSD',
+    url='https://github.com/LeafSoftware/python-lambder',
+    license='MIT',
     author='Chris Chalfant',
     author_email='cchalfant@leafsoftwaresolutions.com',
     description='Creates and manages scheduled AWS Lambdas',
@@ -35,11 +39,11 @@ setup(
         # 'Development Status :: 7 - Inactive',
         'Environment :: Console',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD License',
+        'License :: OSI Approved :: MIT License',
         'Operating System :: POSIX',
         'Operating System :: MacOS',
         'Operating System :: Unix',
-        'Operating System :: Windows',
+        'Operating System :: Microsoft :: Windows',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',

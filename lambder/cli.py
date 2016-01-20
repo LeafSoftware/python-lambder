@@ -181,7 +181,7 @@ def list():
 @click.option('--function-name', help='AWS Lambda name')
 @click.option("--cron", help='cron expression')
 def add(name, function_name, cron):
-  """ Schedule an existing lambda by creating an entry """
+  """ Create an entry """
   lambder.add(name=name, function_name=function_name, cron=cron)
 
 # lambder rm
