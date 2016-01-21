@@ -2,6 +2,7 @@ import click
 import boto3
 import botocore.session
 import json
+from cookiecutter.main import cookiecutter
 
 class Entry:
   name = None
@@ -161,6 +162,16 @@ class Lambder:
         enabled=entry['enabled']
       )
 
+  def create(self, name):
+    cookiecutter(
+      'https://github.com/LeafSoftware/cookiecutter-lambder',
+      no_input=True,
+      extra_context={
+        'lambda_name': name,
+        'repo_name': 'lambder-' + name
+      }
+    )
+
 lambder = Lambder()
 
 @click.group()
@@ -212,3 +223,9 @@ def load(file):
   with open(file, 'r') as f:
     contents = f.read()
   lambder.load(contents)
+
+@cli.command()
+@click.option('--name', help='name of the lambda')
+def create(name):
+  """ Create a new lambda project """
+  lambder.create(name)

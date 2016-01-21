@@ -6,7 +6,8 @@ from setuptools import find_packages, setup
 dependencies = [
   'click>=6.2',
   'boto3>=1.2.3',
-  'botocore>=1.3.20'
+  'botocore>=1.3.20',
+  'cookiecutter>=1.3.0'
 ]
 
 setup(
