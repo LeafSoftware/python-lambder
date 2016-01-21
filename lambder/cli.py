@@ -3,6 +3,9 @@ import boto3
 import botocore.session
 import json
 from cookiecutter.main import cookiecutter
+import os
+import zipfile
+import tempfile
 
 class Entry:
   name = None
@@ -172,6 +175,134 @@ class Lambder:
       }
     )
 
+  # Recursively zip path, creating a zipfile with contents
+  # relative to path.
+  # e.g. lambda/foo/foo.py     -> ./foo.py
+  # e.g. lambda/foo/bar/bar.py -> ./bar/bar.py
+  #
+  def _zipdir(self, zfile, path):
+    with zipfile.ZipFile(zfile, 'w') as ziph:
+      for root, dirs, files in os.walk(path):
+
+        # strip path from beginning of full path
+        rel_path = root
+        if rel_path.startswith(path):
+          rel_path = rel_path[len(path):]
+
+        for file in files:
+          ziph.write(os.path.join(root, file), os.path.join(rel_path, file))
+
+  def _s3_cp(self, src, dest_bucket, dest_key):
+    s3 = boto3.client('s3')
+    s3.upload_file(src, dest_bucket, dest_key)
+
+  def _create_lambda_role(self, role_name):
+    iam = boto3.resource('iam')
+    role = iam.Role(role_name)
+    # return the role if it already exists
+    if role in iam.roles.all():
+      return role
+
+    trust_policy = json.dumps(
+      {
+        "Statement": [
+           {
+             "Effect": "Allow",
+             "Principal": {
+               "Service": ["lambda.amazonaws.com"]
+             },
+             "Action": ["sts:AssumeRole"]
+           }
+        ]
+      }
+    )
+
+    role = iam.create_role(
+      RoleName=role_name,
+      AssumeRolePolicyDocument=trust_policy
+    )
+    return role
+
+  def _put_role_policy(self, role, policy_name, policy_doc):
+    iam = boto3.client('iam')
+    policy = iam.put_role_policy(
+      RoleName=role.name,
+      PolicyName=policy_name,
+      PolicyDocument=policy_doc
+    )
+
+  def _lambda_exists(self, name):
+    awslambda = boto3.client('lambda')
+    try:
+      resp = awslambda.get_function(
+        FunctionName=self._long_name(name)
+      )
+    except botocore.exceptions.ClientError as e:
+      if e.response['Error']['Code'] == 'ResourceNotFoundException':
+        return False
+      else:
+        raise
+
+    return True
+
+  def _update_lambda(self, name, bucket, key):
+    awslambda = boto3.client('lambda')
+    resp = awslambda.update_function_code(
+      FunctionName=self._long_name(name),
+      S3Bucket=bucket,
+      S3Key=key
+    )
+
+  # TODO: allow user to set timeout and memory
+  def _create_lambda(self, name, bucket, key, role_arn):
+    awslambda = boto3.client('lambda')
+    resp = awslambda.create_function(
+      FunctionName=self._long_name(name),
+      Runtime='python2.7',
+      Role=role_arn,
+      Handler="{}.handler".format(name),
+      Code={
+        'S3Bucket': bucket,
+        'S3Key': key
+      }
+    )
+
+  def _long_name(self, name):
+    return 'Lambder-' + name
+
+  def deploy(self, name, bucket):
+    long_name   = 'Lambder-' + name
+    s3_key      = "lambder/lambdas/{}_lambda.zip".format(name)
+    role_name   = long_name + 'ExecuteRole'
+    policy_name = long_name + 'ExecutePolicy'
+    policy_file = os.path.join('iam', 'policy.json')
+
+    # zip up the lambda
+    zfile = os.path.join(tempfile.gettempdir(), "{}_lambda.zip".format(name))
+    self._zipdir(zfile, os.path.join('lambda', name))
+
+    # upload it to s3
+    self._s3_cp(zfile, bucket, s3_key)
+
+    # remote tempfile
+    os.remove(zfile)
+
+    # create the lambda execute role if it does not already exist
+    role = self._create_lambda_role(role_name)
+
+    # update the role's policy from the document in the project
+    policy_doc = None
+    with open(policy_file, 'r') as f:
+      policy_doc = f.read()
+
+    self._put_role_policy(role, policy_name, policy_doc)
+
+    # create or update the lambda function
+    if self._lambda_exists(name):
+      self._update_lambda(name, bucket, s3_key)
+    else:
+      self._create_lambda(name, bucket, s3_key, role.arn)
+
 lambder = Lambder()
 
 @click.group()
@@ -229,3 +360,10 @@ def load(file):
 def create(name):
   """ Create a new lambda project """
   lambder.create(name)
+
+@cli.command()
+@click.option('--name', help='name of the lambda')
+@click.option('--bucket', help='destination s3 bucket')
+def deploy(name, bucket):
+  """ Deploy a lambda from a project directory """
+  lambder.deploy(name, bucket)
