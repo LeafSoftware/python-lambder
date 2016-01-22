@@ -303,6 +303,16 @@ class Lambder:
     else:
       self._create_lambda(name, bucket, s3_key, role.arn)
 
+  # List only the lambder functions, i.e. ones starting with 'Lambder-'
+  def list_functions(self):
+    awslambda = boto3.client('lambda')
+    resp = awslambda.list_functions()
+    functions = resp['Functions']
+    return filter(
+      lambda x: x['FunctionName'].startswith(self.NAME_PREFIX),
+      functions
+    )
+
 lambder = Lambder()
 
 @click.group()
@@ -314,7 +324,7 @@ def events():
   """ Manage scheduled events """
   pass
 
-# lambder list
+# lambder events list
 @events.command()
 def list():
   """ List all events """
@@ -322,7 +332,7 @@ def list():
   for e in entries:
     click.echo(str(e))
 
-# lambder add
+# lambder events add
 @events.command()
 @click.option('--name', help='unique name for entry')
 @click.option('--function-name', help='AWS Lambda name')
@@ -331,27 +341,28 @@ def add(name, function_name, cron):
   """ Create an event """
   lambder.add(name=name, function_name=function_name, cron=cron)
 
-# lambder rm
+# lambder events rm
 @events.command()
 @click.option('--name', help='event to remove')
 def rm(name):
   """ Remove an existing entry """
   lambder.delete(name)
 
-# lambder disable
+# lambder events disable
 @events.command()
 @click.option('--name', help='event to disable')
 def disable(name):
   """ Disable an event """
   lambder.disable(name)
 
-# lambder enable
+# lambder events enable
 @events.command()
 @click.option('--name', help='event to enable')
 def enable(name):
   """ Enable a disabled event """
   lambder.enable(name)
 
+# lambder events load
 @events.command()
 @click.option('--file', help='json file containing events to load')
 def load(file):
@@ -364,6 +375,19 @@ def load(file):
 def functions():
   """ Manage AWS Lambda functions """
   pass
+
+# lambder functions list
+@functions.command()
+def list():
+  """ List lambder functions """
+  functions = lambder.list_functions()
+  output = json.dumps(
+    functions,
+    sort_keys=True,
+    indent=4,
+    separators=(',', ':')
+  )
+  click.echo(output)
 
 @functions.command()
 @click.option('--name', help='name of the lambda')

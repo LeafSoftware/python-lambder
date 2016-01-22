@@ -19,3 +19,13 @@ To use it:
 
     $ lambder --help
 
+# TODO:
+
+* move run script into lambder cli/pure python
+* modify run command to take input event
+* create invoke command to run lambda in AWS
+* fix .env.example workflow
+* lambder function rm
+* refactor lambder class into sep file
+* add pagination where needed (lambda:list-functions)
+* autodetect lambda name by interrogating CWD when in a lambder project
