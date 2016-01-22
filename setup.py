@@ -12,7 +12,7 @@ dependencies = [
 
 setup(
     name='lambder',
-    version='0.1.0',
+    version='1.0.0',
     url='https://github.com/LeafSoftware/python-lambder',
     license='MIT',
     author='Chris Chalfant',
