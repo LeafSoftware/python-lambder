@@ -6,6 +6,7 @@ from cookiecutter.main import cookiecutter
 import os
 import zipfile
 import tempfile
+import time
 
 class Entry:
   name = None
@@ -342,6 +343,7 @@ class Lambder:
     if self._lambda_exists(name):
       self._update_lambda(name, bucket, s3_key)
     else:
+      time.sleep(5) # wait for role to be created
       self._create_lambda(name, bucket, s3_key, role.arn)
 
   # List only the lambder functions, i.e. ones starting with 'Lambder-'
