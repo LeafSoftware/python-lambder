@@ -25,7 +25,6 @@ To use it:
 * modify run command to take input event
 * create invoke command to run lambda in AWS
 * fix .env.example workflow
-* rename lambder methods to include target (rm_event instead of rm)
 * refactor lambder class into sep file
 * add pagination where needed (lambda:list-functions)
 * there may be a timing issue when creating new lambdas:

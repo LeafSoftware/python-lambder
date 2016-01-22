@@ -42,7 +42,7 @@ class Lambder:
       SourceArn=rule_arn
     )
 
-  def add(self, name, function_name, cron, input_event={}, enabled=True):
+  def add_event(self, name, function_name, cron, input_event={}, enabled=True):
     rule_name = self.NAME_PREFIX + name
 
     # events:put-rule
@@ -79,7 +79,7 @@ class Lambder:
       ]
     )
 
-  def list(self):
+  def list_events(self):
     # List all rules by prefix 'Lambder'
     resp = self.events.list_rules(
       NamePrefix=self.NAME_PREFIX
@@ -112,7 +112,7 @@ class Lambder:
 
     return entries
 
-  def delete(self, name):
+  def delete_event(self, name):
     rule_name = self.NAME_PREFIX + name
 
     # get the function name
@@ -142,19 +142,19 @@ class Lambder:
       Name=rule_name
     )
 
-  def disable(self, name):
+  def disable_event(self, name):
     rule_name = self.NAME_PREFIX + name
     resp = self.events.disable_rule(
       Name=rule_name
     )
 
-  def enable(self, name):
+  def enable_event(self, name):
     rule_name = self.NAME_PREFIX + name
     resp = self.events.enable_rule(
       Name=rule_name
     )
 
-  def load(self, data):
+  def load_events(self, data):
     entries = json.loads(data)
     for entry in entries:
       self.add(
@@ -165,7 +165,7 @@ class Lambder:
         enabled=entry['enabled']
       )
 
-  def create(self, name, bucket):
+  def create_project(self, name, bucket):
     cookiecutter(
       'https://github.com/LeafSoftware/cookiecutter-lambder',
       no_input=True,
@@ -311,7 +311,7 @@ class Lambder:
   def _policy_name(self, name):
     return self._long_name(name) + 'ExecutePolicy'
 
-  def deploy(self, name, bucket):
+  def deploy_function(self, name, bucket):
     long_name   = self._long_name(name)
     s3_key      = self._s3_key(name)
     role_name   = self._role_name(name)
@@ -360,7 +360,7 @@ class Lambder:
     self._s3_rm(bucket, key)
 
   # delete all the things associated with this function
-  def rm_function(self, name, bucket):
+  def delete_function(self, name, bucket):
     self._delete_lambda(name)
     self._delete_lambda_role(name)
     self._delete_lambda_zip(name, bucket)
@@ -381,7 +381,7 @@ def events():
 @events.command()
 def list():
   """ List all events """
-  entries = lambder.list()
+  entries = lambder.list_events()
   for e in entries:
     click.echo(str(e))
 
@@ -392,28 +392,28 @@ def list():
 @click.option("--cron", help='cron expression')
 def add(name, function_name, cron):
   """ Create an event """
-  lambder.add(name=name, function_name=function_name, cron=cron)
+  lambder.add_event(name=name, function_name=function_name, cron=cron)
 
 # lambder events rm
 @events.command()
 @click.option('--name', help='event to remove')
 def rm(name):
   """ Remove an existing entry """
-  lambder.delete(name)
+  lambder.delete_event(name)
 
 # lambder events disable
 @events.command()
 @click.option('--name', help='event to disable')
 def disable(name):
   """ Disable an event """
-  lambder.disable(name)
+  lambder.disable_event(name)
 
 # lambder events enable
 @events.command()
 @click.option('--name', help='event to enable')
 def enable(name):
   """ Enable a disabled event """
-  lambder.enable(name)
+  lambder.enable_event(name)
 
 # lambder events load
 @events.command()
@@ -422,7 +422,7 @@ def load(file):
   """ Load events from a json file """
   with open(file, 'r') as f:
     contents = f.read()
-  lambder.load(contents)
+  lambder.load_events(contents)
 
 class FunctionConfig:
   def __init__(self, config_file):
@@ -461,7 +461,7 @@ def list():
 @click.option('--bucket', help='S3 bucket used to deploy function', default='mybucket')
 def new(name, bucket):
   """ Create a new lambda project """
-  lambder.create(name, bucket)
+  lambder.create_project(name, bucket)
 
 # lambder functions deploy
 @functions.command()
@@ -475,7 +475,7 @@ def deploy(config, name, bucket):
   mybucket = bucket or config.bucket
 
   click.echo('Deploying {} to {}'.format(myname, mybucket))
-  lambder.deploy(myname, mybucket)
+  lambder.deploy_function(myname, mybucket)
 
 # lambder functions rm
 @functions.command()
@@ -489,4 +489,4 @@ def rm(config, name, bucket):
   mybucket = bucket or config.bucket
 
   click.echo('Deleting {} from {}'.format(myname, mybucket))
-  lambder.rm_function(myname, mybucket)
+  lambder.delete_function(myname, mybucket)
