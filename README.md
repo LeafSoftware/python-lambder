@@ -25,5 +25,4 @@ To use it:
 * modify run command to take input event
 * create invoke command to run lambda in AWS
 * add code to add site packages from virtualenvwrapper to zip
-* refactor lambder class into sep file
 * add pagination where needed (lambda:list-functions)
