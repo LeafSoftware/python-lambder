@@ -309,61 +309,71 @@ lambder = Lambder()
 def cli():
   pass
 
+@cli.group()
+def events():
+  """ Manage scheduled events """
+  pass
+
 # lambder list
-@cli.command()
+@events.command()
 def list():
-  """ List all entries """
+  """ List all events """
   entries = lambder.list()
   for e in entries:
     click.echo(str(e))
 
 # lambder add
-@cli.command()
+@events.command()
 @click.option('--name', help='unique name for entry')
 @click.option('--function-name', help='AWS Lambda name')
 @click.option("--cron", help='cron expression')
 def add(name, function_name, cron):
-  """ Create an entry """
+  """ Create an event """
   lambder.add(name=name, function_name=function_name, cron=cron)
 
 # lambder rm
-@cli.command()
-@click.option('--name', help='entry to remove')
+@events.command()
+@click.option('--name', help='event to remove')
 def rm(name):
   """ Remove an existing entry """
   lambder.delete(name)
 
 # lambder disable
-@cli.command()
-@click.option('--name', help='entry to disable')
+@events.command()
+@click.option('--name', help='event to disable')
 def disable(name):
-  """ Disable an entry """
+  """ Disable an event """
   lambder.disable(name)
 
 # lambder enable
-@cli.command()
-@click.option('--name', help='entry to enable')
+@events.command()
+@click.option('--name', help='event to enable')
 def enable(name):
-  """ Enable a disabled entry """
+  """ Enable a disabled event """
   lambder.enable(name)
 
-@cli.command()
-@click.option('--file', help='json file containing entries to load')
+@events.command()
+@click.option('--file', help='json file containing events to load')
 def load(file):
-  """ Load entries from a json file """
+  """ Load events from a json file """
   with open(file, 'r') as f:
     contents = f.read()
   lambder.load(contents)
 
-@cli.command()
+@cli.group()
+def functions():
+  """ Manage AWS Lambda functions """
+  pass
+
+@functions.command()
 @click.option('--name', help='name of the lambda')
-def create(name):
+def new(name):
   """ Create a new lambda project """
   lambder.create(name)
 
-@cli.command()
+@functions.command()
 @click.option('--name', help='name of the lambda')
 @click.option('--bucket', help='destination s3 bucket')
 def deploy(name, bucket):
-  """ Deploy a lambda from a project directory """
+  """ Deploy/Update a lambda from a project directory """
   lambder.deploy(name, bucket)
