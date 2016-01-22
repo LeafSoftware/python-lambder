@@ -28,4 +28,6 @@ To use it:
 * lambder function rm
 * refactor lambder class into sep file
 * add pagination where needed (lambda:list-functions)
-* autodetect lambda name by interrogating CWD when in a lambder project
+* there may be a timing issue when creating new lambdas:
+
+    botocore.exceptions.ClientError: An error occurred (InvalidParameterValueException) when calling the CreateFunction operation: The role defined for the function cannot be assumed by Lambda.

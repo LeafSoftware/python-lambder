@@ -165,13 +165,14 @@ class Lambder:
         enabled=entry['enabled']
       )
 
-  def create(self, name):
+  def create(self, name, bucket):
     cookiecutter(
       'https://github.com/LeafSoftware/cookiecutter-lambder',
       no_input=True,
       extra_context={
         'lambda_name': name,
-        'repo_name': 'lambder-' + name
+        'repo_name': 'lambder-' + name,
+        's3_bucket': bucket
       }
     )
 
@@ -371,9 +372,22 @@ def load(file):
     contents = f.read()
   lambder.load(contents)
 
+class FunctionConfig:
+  def __init__(self, config_file):
+    with open(config_file, 'r') as f:
+      contents = f.read()
+    config = json.loads(contents)
+    self.name   = config['name']
+    self.bucket = config['s3_bucket']
+
 @cli.group()
-def functions():
+@click.pass_context
+def functions(context):
   """ Manage AWS Lambda functions """
+  # find lambder.json in CWD
+  config_file = "./lambder.json"
+  if os.path.isfile(config_file):
+    context.obj = FunctionConfig(config_file)
   pass
 
 # lambder functions list
@@ -390,14 +404,21 @@ def list():
   click.echo(output)
 
 @functions.command()
-@click.option('--name', help='name of the lambda')
-def new(name):
+@click.option('--name', help='name of the function')
+@click.option('--bucket', help='S3 bucket used to deploy function', default='mybucket')
+def new(name, bucket):
   """ Create a new lambda project """
-  lambder.create(name)
+  lambder.create(name, bucket)
 
 @functions.command()
 @click.option('--name', help='name of the lambda')
 @click.option('--bucket', help='destination s3 bucket')
-def deploy(name, bucket):
+@click.pass_obj
+def deploy(config, name, bucket):
   """ Deploy/Update a lambda from a project directory """
-  lambder.deploy(name, bucket)
+  # options should override config if it is there
+  myname = name or config.name
+  mybucket = bucket or config.bucket
+
+  click.echo('Deploying {} to {}'.format(myname, mybucket))
+  lambder.deploy(myname, mybucket)
