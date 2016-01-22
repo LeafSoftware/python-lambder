@@ -197,6 +197,12 @@ class Lambder:
     s3 = boto3.client('s3')
     s3.upload_file(src, dest_bucket, dest_key)
 
+  def _s3_rm(self, bucket, key):
+    s3 = boto3.resource('s3')
+    the_bucket = s3.Bucket(bucket)
+    the_object = the_bucket.Object(key)
+    the_object.delete()
+
   def _create_lambda_role(self, role_name):
     iam = boto3.resource('iam')
     role = iam.Role(role_name)
@@ -223,6 +229,24 @@ class Lambder:
       AssumeRolePolicyDocument=trust_policy
     )
     return role
+
+  def _delete_lambda_role(self, name):
+    iam = boto3.resource('iam')
+
+    role_name   = self._role_name(name)
+    policy_name = self._policy_name(name)
+
+    role_policy = iam.RolePolicy(role_name, policy_name)
+    role = iam.Role(self._role_name(name))
+
+    # HACK: This 'if thing in things.all()' biz seems like
+    # a very inefficient way to check for resource
+    # existence...
+    if role_policy in role.policies.all():
+      role_policy.delete()
+
+    if role in iam.roles.all():
+      role.delete()
 
   def _put_role_policy(self, role, policy_name, policy_doc):
     iam = boto3.client('iam')
@@ -268,14 +292,30 @@ class Lambder:
       }
     )
 
+  def _delete_lambda(self, name):
+    awslambda = boto3.client('lambda')
+    if self._lambda_exists(name):
+      resp = awslambda.delete_function(
+        FunctionName=self._long_name(name)
+      )
+
   def _long_name(self, name):
     return 'Lambder-' + name
 
+  def _s3_key(self, name):
+    return "lambder/lambdas/{}_lambda.zip".format(name)
+
+  def _role_name(self, name):
+    return self._long_name(name) + 'ExecuteRole'
+
+  def _policy_name(self, name):
+    return self._long_name(name) + 'ExecutePolicy'
+
   def deploy(self, name, bucket):
-    long_name   = 'Lambder-' + name
-    s3_key      = "lambder/lambdas/{}_lambda.zip".format(name)
-    role_name   = long_name + 'ExecuteRole'
-    policy_name = long_name + 'ExecutePolicy'
+    long_name   = self._long_name(name)
+    s3_key      = self._s3_key(name)
+    role_name   = self._role_name(name)
+    policy_name = self._policy_name(name)
     policy_file = os.path.join('iam', 'policy.json')
 
     # zip up the lambda
@@ -313,6 +353,18 @@ class Lambder:
       lambda x: x['FunctionName'].startswith(self.NAME_PREFIX),
       functions
     )
+
+
+  def _delete_lambda_zip(self, name, bucket):
+    key = self._s3_key(name)
+    self._s3_rm(bucket, key)
+
+  # delete all the things associated with this function
+  def rm_function(self, name, bucket):
+    self._delete_lambda(name)
+    self._delete_lambda_role(name)
+    self._delete_lambda_zip(name, bucket)
+
 
 lambder = Lambder()
 
@@ -403,6 +455,7 @@ def list():
   )
   click.echo(output)
 
+# lambder functions new
 @functions.command()
 @click.option('--name', help='name of the function')
 @click.option('--bucket', help='S3 bucket used to deploy function', default='mybucket')
@@ -410,15 +463,30 @@ def new(name, bucket):
   """ Create a new lambda project """
   lambder.create(name, bucket)
 
+# lambder functions deploy
 @functions.command()
-@click.option('--name', help='name of the lambda')
+@click.option('--name', help='name of the function')
 @click.option('--bucket', help='destination s3 bucket')
 @click.pass_obj
 def deploy(config, name, bucket):
-  """ Deploy/Update a lambda from a project directory """
+  """ Deploy/Update a function from a project directory """
   # options should override config if it is there
-  myname = name or config.name
+  myname   = name or config.name
   mybucket = bucket or config.bucket
 
   click.echo('Deploying {} to {}'.format(myname, mybucket))
   lambder.deploy(myname, mybucket)
+
+# lambder functions rm
+@functions.command()
+@click.option('--name', help='name of the function')
+@click.option('--bucket', help='s3 bucket containing function code')
+@click.pass_obj
+def rm(config, name, bucket):
+  """ Delete lambda function, role, and zipfile """
+  # options should override config if it is there
+  myname   = name or config.name
+  mybucket = bucket or config.bucket
+
+  click.echo('Deleting {} from {}'.format(myname, mybucket))
+  lambder.rm_function(myname, mybucket)
