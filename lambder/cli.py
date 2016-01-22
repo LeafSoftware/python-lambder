@@ -127,3 +127,17 @@ def rm(config, name, bucket):
 
   click.echo('Deleting {} from {}'.format(myname, mybucket))
   lambder.delete_function(myname, mybucket)
+
+# lambder functions invoke
+@functions.command()
+@click.option('--name', help='name of the function')
+@click.option('--input', help='json file containing input event')
+@click.pass_obj
+def invoke(config, name, input):
+  """ Invoke function in AWS """
+  # options should override config if it is there
+  myname = name or config.name
+
+  click.echo('Invoking ' + myname)
+  output = lambder.invoke_function(myname, input)
+  click.echo(output)

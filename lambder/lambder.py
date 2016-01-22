@@ -365,3 +365,19 @@ class Lambder:
     self._delete_lambda(name)
     self._delete_lambda_role(name)
     self._delete_lambda_zip(name, bucket)
+
+  def invoke_function(self, name, input_event):
+    awslambda = boto3.client('lambda')
+    payload = '{}' # default to empty event
+
+    if input_event:
+      with open(input_event, 'r') as f:
+        payload = f.read()
+
+    resp = awslambda.invoke(
+      FunctionName=self._long_name(name),
+      InvocationType='RequestResponse',
+      Payload=payload
+    )
+    results = resp['Payload'].read() # payload is a 'StreamingBody'
+    return results
