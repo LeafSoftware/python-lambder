@@ -1,7 +1,15 @@
 # Lambder
 
-Creates and manages scheduled AWS Lambdas
+Serverless cron jobs written in python and scheduled as AWS Lambdas.
 
+We used to implement maintenance jobs like RDS snapshots and starting/stopping
+instances outside of business hours as CI server builds. This always seemed hacky.
+When scheduled Lambdas were released, we got to work re-implementing these
+scripts. Unfortunately, scheduled Lambdas have a steep learning curve.
+You have to understand IAM roles, CloudWatch Events, and how to deploy and
+update Lambda function code.
+
+Lambder simplifies the creation and deployment of these scheduled jobs.
 
 ## Installation
 
@@ -11,6 +19,14 @@ Here are [installation instructions](https://github.com/mitsuhiko/pipsi#readme).
 Simply run:
 
     $ pipsi install python-lambder
+
+## Getting Started
+
+1. lambder functions new --name foo --bucket mys3bucket
+2. cd lambder-foo
+3. lambder functions deploy
+4. lambder functions list
+5. lambder functions invoke
 
 ## Usage
 
