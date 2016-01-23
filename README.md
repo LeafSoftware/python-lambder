@@ -75,7 +75,15 @@ Delete a function (from within the project directory)
 
     lambder functions rm
 
+## Sample Lambda Functions
+
+* https://github.com/LeafSoftware/lambder-create-images
+* https://github.com/LeafSoftware/lambder-start-instances
+* https://github.com/LeafSoftware/lambder-stop-instances
+
 ## TODO:
 
 * add code to add site packages from virtualenvwrapper to zip
+* add lambda name autodetection to 'lambder events add'
 * add pagination where needed (lambda:list-functions)
+* parameterize lambda timeout
