@@ -22,11 +22,11 @@ Simply run:
 
 ## Getting Started
 
-1. lambder functions new --name foo --bucket mys3bucket
-2. cd lambder-foo
-3. lambder functions deploy
-4. lambder functions list
-5. lambder functions invoke
+1. `lambder functions new --name foo --bucket mys3bucket`
+2. `cd lambder-foo`
+3. `lambder functions deploy`
+4. `lambder functions list`
+5. `lambder functions invoke`
 
 ## Usage
 
