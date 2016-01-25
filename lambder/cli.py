@@ -68,6 +68,9 @@ class FunctionConfig:
     config = json.loads(contents)
     self.name   = config['name']
     self.bucket = config['s3_bucket']
+    self.timeout = config['timeout']
+    self.memory = config['memory']
+    self.description = config['description']
 
 @cli.group()
 @click.pass_context
@@ -96,23 +99,40 @@ def list():
 @functions.command()
 @click.option('--name', help='name of the function')
 @click.option('--bucket', help='S3 bucket used to deploy function', default='mybucket')
-def new(name, bucket):
+@click.option('--timeout', help='function timeout in seconds')
+@click.option('--memory', help='function memory')
+@click.option('--description', help='function description')
+def new(name, bucket, timeout, memory, description):
   """ Create a new lambda project """
-  lambder.create_project(name, bucket)
+  config = {}
+  if timeout:
+    config['timeout'] = timeout
+  if memory:
+    config['memory'] = memory
+  if description:
+    config['description'] = description
+
+  lambder.create_project(name, bucket, config)
 
 # lambder functions deploy
 @functions.command()
 @click.option('--name', help='name of the function')
 @click.option('--bucket', help='destination s3 bucket')
+@click.option('--timeout', help='function timeout in seconds')
+@click.option('--memory', help='function memory')
+@click.option('--description', help='function description')
 @click.pass_obj
-def deploy(config, name, bucket):
+def deploy(config, name, bucket, timeout, memory, description):
   """ Deploy/Update a function from a project directory """
   # options should override config if it is there
-  myname   = name or config.name
-  mybucket = bucket or config.bucket
+  myname    = name or config.name
+  mybucket  = bucket or config.bucket
+  mytimeout = timeout or config.timeout
+  mymemory  = memory or config.memory
+  mydescription = description or config.description
 
   click.echo('Deploying {} to {}'.format(myname, mybucket))
-  lambder.deploy_function(myname, mybucket)
+  lambder.deploy_function(myname, mybucket, mytimeout, mymemory, mydescription)
 
 # lambder functions rm
 @functions.command()

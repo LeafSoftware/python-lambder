@@ -22,6 +22,9 @@ Simply run:
 
 ## Getting Started
 
+To create a new Lambda Function project, specify a name and an S3 bucket to
+store the code zipfile.
+
 1. `lambder functions new --name foo --bucket mys3bucket`
 2. `cd lambder-foo`
 3. `lambder functions deploy`
@@ -65,23 +68,28 @@ List all events created by lambder
 
 ### Managing Functions
 
-Create a new AWS Lambda project
+Create a new AWS Lambda project. Specify a name and an S3 bucket to store
+the Lambda function code. Optionally specify function configuration like
+timeout, memory size, and description.
 
     lambder functions new \
       --name ebs-backups \
-      --bucket my-s3-bucket
+      --bucket my-s3-bucket \
+      --timeout 30 \
+      --memory 128 \
+      --description "ebs backup function"
 
 Deploy the Lambda function (from within the project directory)
 
-    lambder function deploy
+    lambder functions deploy
 
 Invoke the Lambda in AWS (from within the project directory)
 
-    lambder function invoke
+    lambder functions invoke
 
 Invoke the function with input (from within the project directory)
 
-    lambder function invoke --input input/ping.json
+    lambder functions invoke --input input/ping.json
 
 List all functions
 
@@ -102,4 +110,3 @@ Delete a function (from within the project directory)
 * add code to add site packages from virtualenvwrapper to zip
 * add lambda name autodetection to 'lambder events add'
 * add pagination where needed (lambda:list-functions)
-* parameterize lambda timeout

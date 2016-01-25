@@ -165,15 +165,18 @@ class Lambder:
         enabled=entry['enabled']
       )
 
-  def create_project(self, name, bucket):
+  def create_project(self, name, bucket, config):
+    context = {
+      'lambda_name': name,
+      'repo_name': 'lambder-' + name,
+      's3_bucket': bucket
+    }
+    context.update(config)
+
     cookiecutter(
       'https://github.com/LeafSoftware/cookiecutter-lambder',
       no_input=True,
-      extra_context={
-        'lambda_name': name,
-        'repo_name': 'lambder-' + name,
-        's3_bucket': bucket
-      }
+      extra_context=context
     )
 
   # Recursively zip path, creating a zipfile with contents
@@ -270,7 +273,7 @@ class Lambder:
 
     return True
 
-  def _update_lambda(self, name, bucket, key):
+  def _update_lambda(self, name, bucket, key, timeout, memory, description):
     awslambda = boto3.client('lambda')
     resp = awslambda.update_function_code(
       FunctionName=self._long_name(name),
@@ -278,8 +281,15 @@ class Lambder:
       S3Key=key
     )
 
+    resp = awslambda.update_function_configuration(
+      FunctionName=self._long_name(name),
+      Timeout=timeout,
+      MemorySize=memory,
+      Description=description
+    )
+
   # TODO: allow user to set timeout and memory
-  def _create_lambda(self, name, bucket, key, role_arn):
+  def _create_lambda(self, name, bucket, key, role_arn, timeout, memory, description):
     awslambda = boto3.client('lambda')
     resp = awslambda.create_function(
       FunctionName=self._long_name(name),
@@ -289,7 +299,10 @@ class Lambder:
       Code={
         'S3Bucket': bucket,
         'S3Key': key
-      }
+      },
+      Timeout=timeout,
+      MemorySize=memory,
+      Description=description
     )
 
   def _delete_lambda(self, name):
@@ -311,7 +324,7 @@ class Lambder:
   def _policy_name(self, name):
     return self._long_name(name) + 'ExecutePolicy'
 
-  def deploy_function(self, name, bucket):
+  def deploy_function(self, name, bucket, timeout, memory, description):
     long_name   = self._long_name(name)
     s3_key      = self._s3_key(name)
     role_name   = self._role_name(name)
@@ -340,10 +353,10 @@ class Lambder:
 
     # create or update the lambda function
     if self._lambda_exists(name):
-      self._update_lambda(name, bucket, s3_key)
+      self._update_lambda(name, bucket, s3_key, timeout, memory, description)
     else:
       time.sleep(5) # wait for role to be created
-      self._create_lambda(name, bucket, s3_key, role.arn)
+      self._create_lambda(name, bucket, s3_key, role.arn, timeout, memory, description)
 
   # List only the lambder functions, i.e. ones starting with 'Lambder-'
   def list_functions(self):
