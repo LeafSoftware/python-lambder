@@ -18,7 +18,7 @@ Here are [installation instructions](https://github.com/mitsuhiko/pipsi#readme).
 
 Simply run:
 
-    $ pipsi install python-lambder
+    $ pipsi install lambder
 
 ## Getting Started
 
