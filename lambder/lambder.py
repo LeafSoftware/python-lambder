@@ -288,7 +288,6 @@ class Lambder:
       Description=description
     )
 
-  # TODO: allow user to set timeout and memory
   def _create_lambda(self, name, bucket, key, role_arn, timeout, memory, description):
     awslambda = boto3.client('lambda')
     resp = awslambda.create_function(
