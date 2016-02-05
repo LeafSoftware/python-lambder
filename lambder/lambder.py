@@ -351,11 +351,12 @@ class Lambder:
     self._put_role_policy(role, policy_name, policy_doc)
 
     # create or update the lambda function
+    timeout_i = int(timeout)
     if self._lambda_exists(name):
-      self._update_lambda(name, bucket, s3_key, timeout, memory, description)
+      self._update_lambda(name, bucket, s3_key, timeout_i, memory, description)
     else:
       time.sleep(5) # wait for role to be created
-      self._create_lambda(name, bucket, s3_key, role.arn, timeout, memory, description)
+      self._create_lambda(name, bucket, s3_key, role.arn, timeout_i, memory, description)
 
   # List only the lambder functions, i.e. ones starting with 'Lambder-'
   def list_functions(self):
