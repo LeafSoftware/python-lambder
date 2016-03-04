@@ -80,8 +80,13 @@ class FunctionConfig:
         self.timeout = config['timeout']
         self.memory = config['memory']
         self.description = config['description']
-        self.subnet_ids = config['subnet_ids']
-        self.security_group_ids = config['security_group_ids']
+        self.subnet_ids = None
+        self.security_group_ids = None
+
+        if 'subnet_ids' in config:
+            self.subnet_ids = config['subnet_ids']
+        if 'security_group_ids' in config:
+            self.security_group_ids = config['security_group_ids']
 
 
 @cli.group()
