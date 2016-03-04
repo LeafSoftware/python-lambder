@@ -22,6 +22,8 @@ Simply run:
 
 ## Getting Started
 
+Lambder uses [boto3](http://boto3.readthedocs.org/en/latest/) to access AWS. You'll need to configure it with your access keys and default region by following [these instructions](http://boto3.readthedocs.org/en/latest/guide/configuration.html#guide-configuration).
+
 To create a new Lambda Function project, specify a name and an S3 bucket to
 store the code zipfile.
 
