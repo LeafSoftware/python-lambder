@@ -259,6 +259,13 @@ class Lambder:
       PolicyDocument=policy_doc
     )
 
+  def _attach_vpc_policy(self, role):
+    iam = boto3.client('iam')
+    iam.attach_role_policy(
+      RoleName=role,
+      PolicyArn='arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole'
+    )
+
   def _lambda_exists(self, name):
     awslambda = boto3.client('lambda')
     try:
@@ -273,7 +280,7 @@ class Lambder:
 
     return True
 
-  def _update_lambda(self, name, bucket, key, timeout, memory, description):
+  def _update_lambda(self, name, bucket, key, timeout, memory, description, vpc_config):
     awslambda = boto3.client('lambda')
     resp = awslambda.update_function_code(
       FunctionName=self._long_name(name),
@@ -285,10 +292,11 @@ class Lambder:
       FunctionName=self._long_name(name),
       Timeout=timeout,
       MemorySize=memory,
-      Description=description
+      Description=description,
+      VpcConfig=vpc_config
     )
 
-  def _create_lambda(self, name, bucket, key, role_arn, timeout, memory, description):
+  def _create_lambda(self, name, bucket, key, role_arn, timeout, memory, description, vpc_config):
     awslambda = boto3.client('lambda')
     resp = awslambda.create_function(
       FunctionName=self._long_name(name),
@@ -301,7 +309,8 @@ class Lambder:
       },
       Timeout=timeout,
       MemorySize=memory,
-      Description=description
+      Description=description,
+      VpcConfig=vpc_config
     )
 
   def _delete_lambda(self, name):
@@ -323,7 +332,7 @@ class Lambder:
   def _policy_name(self, name):
     return self._long_name(name) + 'ExecutePolicy'
 
-  def deploy_function(self, name, bucket, timeout, memory, description):
+  def deploy_function(self, name, bucket, timeout, memory, description, vpc_config):
     long_name   = self._long_name(name)
     s3_key      = self._s3_key(name)
     role_name   = self._role_name(name)
@@ -337,7 +346,7 @@ class Lambder:
     # upload it to s3
     self._s3_cp(zfile, bucket, s3_key)
 
-    # remote tempfile
+    # remove tempfile
     os.remove(zfile)
 
     # create the lambda execute role if it does not already exist
@@ -350,13 +359,17 @@ class Lambder:
 
     self._put_role_policy(role, policy_name, policy_doc)
 
+    # add the vpc policy to the role if vpc_config is set
+    if vpc_config:
+      self._attach_vpc_policy(role_name)
+
     # create or update the lambda function
     timeout_i = int(timeout)
     if self._lambda_exists(name):
-      self._update_lambda(name, bucket, s3_key, timeout_i, memory, description)
+      self._update_lambda(name, bucket, s3_key, timeout_i, memory, description, vpc_config)
     else:
       time.sleep(5) # wait for role to be created
-      self._create_lambda(name, bucket, s3_key, role.arn, timeout_i, memory, description)
+      self._create_lambda(name, bucket, s3_key, role.arn, timeout_i, memory, description, vpc_config)
 
   # List only the lambder functions, i.e. ones starting with 'Lambder-'
   def list_functions(self):

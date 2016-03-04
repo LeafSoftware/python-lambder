@@ -71,6 +71,8 @@ class FunctionConfig:
     self.timeout = config['timeout']
     self.memory = config['memory']
     self.description = config['description']
+    self.subnet_ids = config['subnet_ids']
+    self.security_group_ids = config['security_group_ids']
 
 @cli.group()
 @click.pass_context
@@ -102,7 +104,9 @@ def list():
 @click.option('--timeout', help='function timeout in seconds')
 @click.option('--memory', help='function memory')
 @click.option('--description', help='function description')
-def new(name, bucket, timeout, memory, description):
+@click.option('--subnet-ids', help='comma-separated list of VPC subnet ids')
+@click.option('--security-group-ids', help='comma-separated list of VPC security group ids')
+def new(name, bucket, timeout, memory, description, subnet_ids, security_group_ids):
   """ Create a new lambda project """
   config = {}
   if timeout:
@@ -111,6 +115,10 @@ def new(name, bucket, timeout, memory, description):
     config['memory'] = memory
   if description:
     config['description'] = description
+  if subnet_ids:
+    config['subnet_ids'] = subnet_ids
+  if security_group_ids:
+    config['security_group_ids'] = security_group_ids
 
   lambder.create_project(name, bucket, config)
 
@@ -121,8 +129,10 @@ def new(name, bucket, timeout, memory, description):
 @click.option('--timeout', help='function timeout in seconds')
 @click.option('--memory', help='function memory')
 @click.option('--description', help='function description')
+@click.option('--subnet-ids', help='comma-separated list of VPC subnet ids')
+@click.option('--security-group-ids', help='comma-separated list of VPC security group ids')
 @click.pass_obj
-def deploy(config, name, bucket, timeout, memory, description):
+def deploy(config, name, bucket, timeout, memory, description, subnet_ids, security_group_ids):
   """ Deploy/Update a function from a project directory """
   # options should override config if it is there
   myname    = name or config.name
@@ -130,9 +140,18 @@ def deploy(config, name, bucket, timeout, memory, description):
   mytimeout = timeout or config.timeout
   mymemory  = memory or config.memory
   mydescription = description or config.description
+  mysubnet_ids  = subnet_ids or config.subnet_ids
+  mysecurity_group_ids = security_group_ids or config.security_group_ids
+
+  vpc_config = {}
+  if mysubnet_ids and mysecurity_group_ids:
+    vpc_config = {
+      'SubnetIds': mysubnet_ids.split(','),
+      'SecurityGroupIds': mysecurity_group_ids.split(',')
+    }
 
   click.echo('Deploying {} to {}'.format(myname, mybucket))
-  lambder.deploy_function(myname, mybucket, mytimeout, mymemory, mydescription)
+  lambder.deploy_function(myname, mybucket, mytimeout, mymemory, mydescription, vpc_config)
 
 # lambder functions rm
 @functions.command()
