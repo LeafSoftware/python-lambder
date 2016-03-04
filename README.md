@@ -86,8 +86,8 @@ You can also deploy your Lambda functions to your VPC.
       --bucket my-s3-bucket \
       --timeout 30 \
       --memory 128 \
-      --description "curl a site on a  private subnet"
-      --subnet-ids  "subnet-1abcdef,subnet-2abcdef"
+      --description "curl a site on a  private subnet" \
+      --subnet-ids  "subnet-1abcdef,subnet-2abcdef" \
       --security-group-ids "sg-12345678"
 
 Deploy the Lambda function (from within the project directory)
