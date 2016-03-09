@@ -22,6 +22,8 @@ Simply run:
 
 ## Getting Started
 
+Lambder uses [boto3](http://boto3.readthedocs.org/en/latest/) to access AWS. You'll need to configure it with your access keys and default region by following [these instructions](http://boto3.readthedocs.org/en/latest/guide/configuration.html#guide-configuration).
+
 To create a new Lambda Function project, specify a name and an S3 bucket to
 store the code zipfile.
 
@@ -78,6 +80,17 @@ timeout, memory size, and description.
       --timeout 30 \
       --memory 128 \
       --description "ebs backup function"
+
+You can also deploy your Lambda functions to your VPC.
+
+    lambder functions new \
+      --name curl-backend-site \
+      --bucket my-s3-bucket \
+      --timeout 30 \
+      --memory 128 \
+      --description "curl a site on a  private subnet" \
+      --subnet-ids  "subnet-1abcdef,subnet-2abcdef" \
+      --security-group-ids "sg-12345678"
 
 Deploy the Lambda function (from within the project directory)
 

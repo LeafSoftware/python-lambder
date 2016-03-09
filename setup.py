@@ -5,14 +5,14 @@ from setuptools import find_packages, setup
 
 dependencies = [
   'click>=6.2',
-  'boto3>=1.2.3',
-  'botocore>=1.3.20',
+  'boto3>=1.2.6',
+  'botocore>=1.4.0',
   'cookiecutter>=1.3.0'
 ]
 
 setup(
     name='lambder',
-    version='1.1.1',
+    version='1.2.2',
     url='https://github.com/LeafSoftware/python-lambder',
     license='MIT',
     author='Chris Chalfant',
