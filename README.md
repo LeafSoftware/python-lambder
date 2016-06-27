@@ -121,6 +121,7 @@ Delete a function (from within the project directory)
 * https://github.com/LeafSoftware/lambder-create-snapshots
 * https://github.com/LeafSoftware/lambder-replicate-snapshots
 * https://github.com/LeafSoftware/lambder-create-rds-snapshots
+* https://github.com/LeafSoftware/lambder-implement-best-practices
 
 ## TODO:
 
