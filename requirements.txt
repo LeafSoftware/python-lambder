@@ -8,7 +8,7 @@ cookiecutter==1.3.0
 docutils==0.12
 future==0.15.2
 futures==3.0.5
-Jinja2==2.8
+Jinja2==2.11.3
 jmespath==0.9.0
 MarkupSafe==0.23
 pipsi==0.9
